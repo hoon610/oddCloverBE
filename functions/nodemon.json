@@ -1,0 +1,6 @@
+{
+  "watch": ["lib"],
+  "ext": "js",
+  "ignore": ["node_modules"],
+  "verbose": true
+}

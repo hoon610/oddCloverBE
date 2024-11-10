@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "dev": "oddclover-dev",
+    "prod": "oddclover-prod"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "oddcloverbe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd functions && rm -rf lib && npm run build && cd ..",
+    "build:prod": "cd functions && rm -rf lib && npm run build && cd ..",
+    "deploy:dev": "npm run build:dev && firebase deploy --only functions --project dev --force",
+    "deploy:prod": "npm run build:prod && firebase deploy --only functions --project prod --force"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "firebase": "^11.0.1",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "dotenv-cli": "^7.4.2",
+    "eslint": "^9.14.0",
+    "firebase-functions-test": "^3.3.0",
+    "typescript": "^5.6.3"
+  }
+}
