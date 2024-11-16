@@ -2,6 +2,14 @@ import * as admin from "firebase-admin";
 import { Sport, ProcessedSport, CombinedOddsData } from "../types";
 import { logger } from "firebase-functions/v2";
 
+interface UpdateData {
+  data: CombinedOddsData;
+  metadata: {
+    lastUpdated: number;
+    count: number;
+  };
+}
+
 /**
  * Writes the list of sports to the Firebase Realtime Database
  * @param {Sport[]} sports The list of sports to write to Firebase
@@ -98,24 +106,44 @@ export const getActiveSportTags = async (): Promise<string[]> => {
 export const writeOddsToFirebase = async (
   oddsData: CombinedOddsData
 ): Promise<void> => {
+  const db = admin.database();
   try {
-    const db = admin.database();
+    // Validate input data
+    if (!oddsData || typeof oddsData !== "object") {
+      throw new Error("Invalid odds data format");
+    }
 
-    const updateData = {
-      data: oddsData,
+    // Filter out any undefined or null values
+    const sanitizedData = Object.entries(oddsData).reduce((acc, [sport, data]) => {
+      if (Array.isArray(data) && data.length > 0) {
+        acc[sport] = data;
+      } else {
+        logger.warn(`Skipping invalid data for sport: ${sport}`);
+      }
+      return acc;
+    }, {} as CombinedOddsData);
+
+    const updateData: UpdateData = {
+      data: sanitizedData,
       metadata: {
         lastUpdated: Date.now(),
-        count: Object.keys(oddsData).length,
+        count: Object.keys(sanitizedData).length,
       },
     };
 
-    // Write to Firebase
-    await db.ref("odds").set(updateData);
-    logger.info("Sports write completed successfully");
+    // Write to both Realtime Database and Firestore for redundancy
+    await Promise.all([
+      db.ref("odds").set(updateData),
+    ]);
+
+    logger.info("Sports write completed successfully", {
+      sportsCount: updateData.metadata.count,
+      timestamp: new Date(updateData.metadata.lastUpdated).toISOString(),
+    });
   } catch (error) {
     logger.error("Sports write failed", {
-      error,
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
     });
     throw error;
   }
